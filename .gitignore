@@ -1,2 +1,28 @@
-# deps
 node_modules/
+
+# Bun's cache and other related files
+.bun/
+
+# Environment files
+.env
+.env.local
+.env.*
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+bun-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor directories
+.vscode/
+.idea/
+
+# Temporary files
+/tmp
+.cache

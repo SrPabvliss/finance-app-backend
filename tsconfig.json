@@ -1,7 +1,11 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
-  }
+	"compilerOptions": {
+		"strict": true,
+		"jsx": "react-jsx",
+		"jsxImportSource": "hono/jsx",
+		"esModuleInterop": true,
+		"moduleResolution": "node",
+		"target": "esnext",
+		"module": "esnext"
+	}
 }
