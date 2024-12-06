@@ -6,6 +6,9 @@
 		"esModuleInterop": true,
 		"moduleResolution": "node",
 		"target": "esnext",
-		"module": "esnext"
+		"module": "esnext",
+		"paths": {
+			"@/env": ["./src/core/infrastructure/env/env.ts"]
+		}
 	}
 }
