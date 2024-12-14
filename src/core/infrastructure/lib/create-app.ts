@@ -4,6 +4,7 @@ import { defaultHook } from "stoker/openapi";
 
 import { pinoLogger } from "../middleware/pino-logger";
 import { AppBindings, AppOpenAPI } from "../types/app-types";
+import DatabaseConnection from "@/db";
 
 export function createRouter() {
 	return new OpenAPIHono<AppBindings>({
@@ -13,6 +14,8 @@ export function createRouter() {
 
 export default function createApp() {
 	const app = createRouter();
+	const dbConnection = DatabaseConnection.getInstance();
+	dbConnection.checkConnection();
 	app.use(serveEmojiFavicon("📝"));
 	app.use(pinoLogger());
 
