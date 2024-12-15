@@ -10,7 +10,9 @@
 		"paths": {
 			"@/env": ["./src/core/infrastructure/env/env.ts"],
 			"@/db": ["./src/core/infrastructure/database/index.ts"],
-			"@/schema": ["./src/core/infrastructure/database/schema.ts"]
+			"@/schema": ["./src/core/infrastructure/database/schema.ts"],
+			"@/shared/*": ["./src/shared/*"],
+			"@/users/*": ["./src/features/users/*"]
 		}
 	}
 }
