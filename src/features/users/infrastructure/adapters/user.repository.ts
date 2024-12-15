@@ -9,6 +9,11 @@ export class PgUserRepository implements UserRepository {
 
 	private constructor() {}
 
+	async findAll(): Promise<IUser[]> {
+		const result = await this.db.select().from(users);
+		return result.map((raw) => this.mapToEntity(raw));
+	}
+
 	async findById(id: number): Promise<IUser | null> {
 		const result = await this.db.select().from(users).where(eq(users.id, id));
 		return result[0] ? this.mapToEntity(result[0]) : null;

@@ -5,8 +5,8 @@ import { IUser } from "../entities/IUser";
 export interface IUserService {
 	create(data: CreateUserDto): Promise<IUser>;
 	update(id: number, data: UpdateUserDto): Promise<IUser>;
-	delete(id: number): Promise<void>;
+	delete(id: number): Promise<boolean>;
 	getById(id: number): Promise<IUser>;
 	setRecoveryToken(id: number): Promise<string>;
-	resetPassword(token: string, newPassword: string): Promise<void>;
+	resetPassword(token: string, newPassword: string): Promise<boolean>;
 }

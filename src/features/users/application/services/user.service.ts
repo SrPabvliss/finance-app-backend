@@ -58,9 +58,10 @@ export class UserService implements IUserService {
 		return this.userRepository.update(id, updateData);
 	}
 
-	async delete(id: number): Promise<void> {
+	async delete(id: number): Promise<boolean> {
 		await this.getById(id);
-		await this.userRepository.delete(id);
+		const deleted = await this.userRepository.delete(id);
+		return deleted
 	}
 
 	async getById(id: number): Promise<IUser> {
@@ -69,6 +70,10 @@ export class UserService implements IUserService {
 			throw new Error("IUser not found");
 		}
 		return user;
+	}
+
+	async getAll(): Promise<IUser[]> {
+		return this.userRepository.findAll();
 	}
 
 	async setRecoveryToken(id: number): Promise<string> {
@@ -83,23 +88,32 @@ export class UserService implements IUserService {
 		return token;
 	}
 
-	async resetPassword(token: string, newPassword: string): Promise<void> {
-		const user = await this.userRepository.findByRecoveryToken(token);
+	async resetPassword(token: string, newPassword: string): Promise<boolean> {
 
-		if (!user || !user.recoveryTokenExpires) {
-			throw new Error("Invalid or expired recovery token");
+		try {
+			
+			const user = await this.userRepository.findByRecoveryToken(token);
+	
+			if (!user || !user.recoveryTokenExpires) {
+				throw new Error("Invalid or expired recovery token");
+			}
+	
+			if (user.recoveryTokenExpires < new Date()) {
+				throw new Error("Recovery token has expired");
+			}
+	
+			const passwordHash = await hash(newPassword);
+	
+			await this.userRepository.update(user.id, {
+				passwordHash,
+				recoveryToken: null,
+				recoveryTokenExpires: null,
+			});
+
+			return true
+		} catch (error) {	
+			return false
+			
 		}
-
-		if (user.recoveryTokenExpires < new Date()) {
-			throw new Error("Recovery token has expired");
-		}
-
-		const passwordHash = await hash(newPassword);
-
-		await this.userRepository.update(user.id, {
-			passwordHash,
-			recoveryToken: null,
-			recoveryTokenExpires: null,
-		});
 	}
 }

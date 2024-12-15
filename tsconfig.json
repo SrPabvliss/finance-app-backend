@@ -12,7 +12,8 @@
 			"@/db": ["./src/core/infrastructure/database/index.ts"],
 			"@/schema": ["./src/core/infrastructure/database/schema.ts"],
 			"@/shared/*": ["./src/shared/*"],
-			"@/users/*": ["./src/features/users/*"]
+			"@/users/*": ["./src/features/users/*"],
+			"@/core/*": ["./src/core/*"]
 		}
 	}
 }
