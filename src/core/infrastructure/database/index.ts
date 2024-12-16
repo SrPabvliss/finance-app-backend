@@ -7,6 +7,7 @@ export class DatabaseConnection {
 	private static instance: DatabaseConnection;
 	private pool: Pool;
 	private drizzleInstance: ReturnType<typeof drizzle>;
+	private isClosing: boolean = false;
 
 	private constructor() {
 		this.pool = new Pool({
@@ -28,7 +29,8 @@ export class DatabaseConnection {
 			process.exit(-1);
 		});
 
-		process.on("SIGINT", async () => {
+		process.once("SIGINT", async () => {
+			console.info("\nReceived SIGINT. Closing database connection...");
 			await this.close();
 			process.exit(0);
 		});
@@ -63,6 +65,12 @@ export class DatabaseConnection {
 	}
 
 	public async close(): Promise<void> {
+		if (this.isClosing) {
+			return;
+		}
+
+		this.isClosing = true;
+
 		try {
 			await this.pool.end();
 			console.info("✅ Database connection closed successfully");
