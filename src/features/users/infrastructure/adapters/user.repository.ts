@@ -1,13 +1,21 @@
 import { eq } from "drizzle-orm";
 import DatabaseConnection from "@/db";
 import { users } from "@/schema";
-import { UserRepository } from "@/users/domain/ports/user-repository.port";
+import { IUserRepository } from "@/users/domain/ports/user-repository.port";
 import { IUser } from "@/users/domain/entities/IUser";
 
-export class PgUserRepository implements UserRepository {
+export class PgUserRepository implements IUserRepository {
 	private db = DatabaseConnection.getInstance().db;
+	private static instance: PgUserRepository;
 
 	private constructor() {}
+
+	public static getInstance(): PgUserRepository {
+		if (!PgUserRepository.instance) {
+			PgUserRepository.instance = new PgUserRepository();
+		}
+		return PgUserRepository.instance;
+	}
 
 	async findAll(): Promise<IUser[]> {
 		const result = await this.db.select().from(users);

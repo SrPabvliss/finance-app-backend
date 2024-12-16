@@ -1,22 +1,33 @@
 import { hash } from "@/shared/utils/crypto.util";
 import { IUser } from "@/users/domain/entities/IUser";
-import { UserRepository } from "@/users/domain/ports/user-repository.port";
-import { UpdateUserDto } from "../dtos/update-user.dto";
-import { CreateUserDto } from "../dtos/create-user.dto";
+import { IUserRepository } from "@/users/domain/ports/user-repository.port";
 import { generateToken } from "@/shared/utils/token.util";
 import { UserUtilsService } from "./user-utils.service";
 import { IUserService } from "@/users/domain/ports/user-service.port";
+import {
+	CreateRoute,
+	DeleteRoute,
+	GetByIdRoute,
+	ListRoute,
+	ResetPasswordRoute,
+	SetRecoveryTokenRoute,
+	UpdateRoute,
+} from "@/users/infrastructure/controllers/user.routes";
+import * as HttpStatusCodes from "stoker/http-status-codes";
+import { createHandler } from "@/core/infrastructure/lib/handler.wrapper,";
+import { UserApiAdapter } from "@/users/infrastructure/adapters/user.-api.adapter";
+import { createErrorResponse } from "@/shared/utils/error.util";
 
 export class UserService implements IUserService {
 	private static instance: UserService;
 
 	constructor(
-		private readonly userRepository: UserRepository,
+		private readonly userRepository: IUserRepository,
 		private readonly userUtils: UserUtilsService
 	) {}
 
 	public static getInstance(
-		userRepository: UserRepository,
+		userRepository: IUserRepository,
 		userUtils: UserUtilsService
 	): UserService {
 		if (!UserService.instance) {
@@ -25,29 +36,67 @@ export class UserService implements IUserService {
 		return UserService.instance;
 	}
 
-	async create(data: CreateUserDto): Promise<IUser> {
-		await this.userUtils.validateUniqueFields(data.email, data.username);
+	getAll = createHandler<ListRoute>(async (c) => {
+		const users = await this.userRepository.findAll();
+		const apiResponse = UserApiAdapter.toApiResponseList(users);
+		return c.json(apiResponse, HttpStatusCodes.OK);
+	});
+
+	create = createHandler<CreateRoute>(async (c) => {
+		const data = c.req.valid("json");
+		const validation = await this.userUtils.validateUniqueFields(
+			data.email,
+			data.username
+		);
+
+		if (!validation.isValid) {
+			return c.json(
+				createErrorResponse(`The ${validation.field} is already taken`),
+				HttpStatusCodes.BAD_REQUEST
+			);
+		}
 
 		const passwordHash = await hash(data.password);
-
-		return this.userRepository.create({
+		const user = await this.userRepository.create({
 			name: data.name,
 			username: data.username,
 			email: data.email,
 			passwordHash,
 			active: true,
 		});
-	}
 
-	async update(id: number, data: UpdateUserDto): Promise<IUser> {
-		const user = await this.getById(id);
+		return c.json(UserApiAdapter.toApiResponse(user), HttpStatusCodes.CREATED);
+	});
+
+	update = createHandler<UpdateRoute>(async (c) => {
+		const id = c.req.param("id");
+		const data = c.req.valid("json");
+		const user = await this.userRepository.findById(Number(id));
+
+		if (!user) {
+			return c.json({ error: "User not found" }, HttpStatusCodes.NOT_FOUND);
+		}
 
 		if (data.email && data.email !== user.email) {
-			await this.userUtils.validateEmailUnique(data.email);
+			const isValid = await this.userUtils.validateEmailUnique(data.email);
+
+			if (!isValid) {
+				return c.json(
+					createErrorResponse("The email is already taken"),
+					HttpStatusCodes.BAD_REQUEST
+				);
+			}
 		}
 
 		if (data.username && data.username !== user.username) {
-			await this.userUtils.validateUsernameUnique(data.username);
+			const valid = await this.userUtils.validateUsernameUnique(data.username);
+
+			if (!valid) {
+				return c.json(
+					createErrorResponse("The username is already taken"),
+					HttpStatusCodes.BAD_REQUEST
+				);
+			}
 		}
 
 		const updateData: Partial<IUser> = {
@@ -55,65 +104,83 @@ export class UserService implements IUserService {
 			...(data.password && { passwordHash: await hash(data.password) }),
 		};
 
-		return this.userRepository.update(id, updateData);
-	}
+		console.log(updateData);
 
-	async delete(id: number): Promise<boolean> {
-		await this.getById(id);
-		const deleted = await this.userRepository.delete(id);
-		return deleted
-	}
+		const updatedUser = await this.userRepository.update(
+			Number(id),
+			updateData
+		);
+		return c.json(
+			UserApiAdapter.toApiResponse(updatedUser),
+			HttpStatusCodes.OK
+		);
+	});
 
-	async getById(id: number): Promise<IUser> {
-		const user = await this.userRepository.findById(id);
+	delete = createHandler<DeleteRoute>(async (c) => {
+		const id = c.req.param("id");
+		const user = await this.userRepository.findById(Number(id));
 		if (!user) {
-			throw new Error("IUser not found");
+			return c.json({ error: "User not found" }, HttpStatusCodes.NOT_FOUND);
 		}
-		return user;
-	}
+		const deleted = await this.userRepository.delete(Number(id));
+		return c.json({ success: deleted }, HttpStatusCodes.OK);
+	});
 
-	async getAll(): Promise<IUser[]> {
-		return this.userRepository.findAll();
-	}
+	getById = createHandler<GetByIdRoute>(async (c) => {
+		const id = c.req.param("id");
+		const user = await this.userRepository.findById(Number(id));
+		if (!user) {
+			return c.json({ error: "User not found" }, HttpStatusCodes.NOT_FOUND);
+		}
+		return c.json(UserApiAdapter.toApiResponse(user), HttpStatusCodes.OK);
+	});
 
-	async setRecoveryToken(id: number): Promise<string> {
-		const user = await this.getById(id);
+	setRecoveryToken = createHandler<SetRecoveryTokenRoute>(async (c) => {
+		const { id } = c.req.valid("json");
+		const user = await this.userRepository.findById(Number(id));
+
+		if (!user) {
+			return c.json({ error: "User not found" }, HttpStatusCodes.NOT_FOUND);
+		}
 
 		const token = generateToken();
 		const expires = new Date();
 		expires.setHours(expires.getHours() + 24);
 
-		await this.userRepository.setRecoveryToken(id, token, expires);
+		await this.userRepository.setRecoveryToken(Number(id), token, expires);
+		return c.json({ token }, HttpStatusCodes.OK);
+	});
 
-		return token;
-	}
-
-	async resetPassword(token: string, newPassword: string): Promise<boolean> {
+	resetPassword = createHandler<ResetPasswordRoute>(async (c) => {
+		const { token, newPassword } = c.req.valid("json");
 
 		try {
-			
 			const user = await this.userRepository.findByRecoveryToken(token);
-	
+
 			if (!user || !user.recoveryTokenExpires) {
-				throw new Error("Invalid or expired recovery token");
+				return c.json(
+					{ error: "Invalid or expired recovery token" },
+					HttpStatusCodes.BAD_REQUEST
+				);
 			}
-	
+
 			if (user.recoveryTokenExpires < new Date()) {
-				throw new Error("Recovery token has expired");
+				return c.json(
+					{ error: "Recovery token has expired" },
+					HttpStatusCodes.BAD_REQUEST
+				);
 			}
-	
+
 			const passwordHash = await hash(newPassword);
-	
 			await this.userRepository.update(user.id, {
 				passwordHash,
 				recoveryToken: null,
 				recoveryTokenExpires: null,
 			});
 
-			return true
-		} catch (error) {	
-			return false
-			
+			return c.json({ success: true }, HttpStatusCodes.OK);
+		} catch (error) {
+			return c.json({ success: false }, HttpStatusCodes.INTERNAL_SERVER_ERROR);
 		}
-	}
+	});
 }

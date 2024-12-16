@@ -1,12 +1,12 @@
 import { IUser } from "@/users/domain/entities/IUser";
-import { UserRepository } from "@/users/domain/ports/user-repository.port";
+import { IUserRepository } from "@/users/domain/ports/user-repository.port";
 
 export class UserUtilsService {
 	private static instance: UserUtilsService;
 
-	constructor(private readonly userRepository: UserRepository) {}
+	constructor(private readonly userRepository: IUserRepository) {}
 
-	public static getInstance(userRepository: UserRepository): UserUtilsService {
+	public static getInstance(userRepository: IUserRepository): UserUtilsService {
 		if (!UserUtilsService.instance) {
 			UserUtilsService.instance = new UserUtilsService(userRepository);
 		}
@@ -39,30 +39,34 @@ export class UserUtilsService {
 		return !!user;
 	}
 
-	async validateUniqueFields(email: string, username: string): Promise<void> {
+	async validateUniqueFields(
+		email: string,
+		username: string
+	): Promise<{
+		isValid: boolean;
+		field?: "email" | "username";
+	}> {
 		const [emailExists, usernameExists] = await Promise.all([
 			this.isEmailTaken(email),
 			this.isUsernameTaken(username),
 		]);
 
 		if (emailExists) {
-			throw new Error("Email already exists");
+			return { isValid: false, field: "email" };
 		}
 
 		if (usernameExists) {
-			throw new Error("Username already exists");
+			return { isValid: false, field: "username" };
 		}
+
+		return { isValid: true };
 	}
 
-	async validateEmailUnique(email: string): Promise<void> {
-		if (await this.isEmailTaken(email)) {
-			throw new Error("Email already exists");
-		}
+	async validateEmailUnique(email: string): Promise<boolean> {
+		return !(await this.isEmailTaken(email));
 	}
 
-	async validateUsernameUnique(username: string): Promise<void> {
-		if (await this.isUsernameTaken(username)) {
-			throw new Error("Username already exists");
-		}
+	async validateUsernameUnique(username: string): Promise<boolean> {
+		return !(await this.isUsernameTaken(username));
 	}
 }

@@ -1,6 +1,6 @@
 import { IUser } from "../entities/IUser";
 
-export interface UserRepository {
+export interface IUserRepository {
 	findAll(): Promise<IUser[]>;
 	findById(id: number): Promise<IUser | null>;
 	findByEmail(email: string): Promise<IUser | null>;

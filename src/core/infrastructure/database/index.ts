@@ -3,7 +3,6 @@ import { Pool } from "pg";
 import env from "@/env";
 import * as schema from "./schema";
 
-
 export class DatabaseConnection {
 	private static instance: DatabaseConnection;
 	private pool: Pool;
@@ -16,7 +15,10 @@ export class DatabaseConnection {
 			user: env.DATABASE_USERNAME,
 			password: env.DATABASE_PASSWORD,
 			database: env.DATABASE_NAME,
-      ssl: false
+			ssl: false,
+			max: 20,
+			idleTimeoutMillis: 30000,
+			connectionTimeoutMillis: 2000,
 		});
 
 		this.drizzleInstance = drizzle(this.pool, { schema });
@@ -24,6 +26,11 @@ export class DatabaseConnection {
 		this.pool.on("error", (err) => {
 			console.error("Unexpected error on idle client", err);
 			process.exit(-1);
+		});
+
+		process.on("SIGINT", async () => {
+			await this.close();
+			process.exit(0);
 		});
 	}
 
@@ -49,6 +56,10 @@ export class DatabaseConnection {
 			console.error("❌ Database connection failed:", error);
 			throw error;
 		}
+	}
+
+	public getPoolStatus(): string {
+		return `Total: ${this.pool.totalCount} | Idle: ${this.pool.idleCount} | Waiting: ${this.pool.waitingCount}`;
 	}
 
 	public async close(): Promise<void> {

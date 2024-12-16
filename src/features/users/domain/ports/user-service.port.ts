@@ -1,12 +1,20 @@
-import { CreateUserDto } from "../../application/dtos/create-user.dto";
-import { UpdateUserDto } from "../../application/dtos/update-user.dto";
-import { IUser } from "../entities/IUser";
+import { AppRouteHandler } from "@/core/infrastructure/types/app-types";
+import {
+	CreateRoute,
+	DeleteRoute,
+	GetByIdRoute,
+	ListRoute,
+	ResetPasswordRoute,
+	SetRecoveryTokenRoute,
+	UpdateRoute,
+} from "@/users/infrastructure/controllers/user.routes";
 
 export interface IUserService {
-	create(data: CreateUserDto): Promise<IUser>;
-	update(id: number, data: UpdateUserDto): Promise<IUser>;
-	delete(id: number): Promise<boolean>;
-	getById(id: number): Promise<IUser>;
-	setRecoveryToken(id: number): Promise<string>;
-	resetPassword(token: string, newPassword: string): Promise<boolean>;
+	getAll: AppRouteHandler<ListRoute>;
+	create: AppRouteHandler<CreateRoute>;
+	update: AppRouteHandler<UpdateRoute>;
+	delete: AppRouteHandler<DeleteRoute>;
+	getById: AppRouteHandler<GetByIdRoute>;
+	setRecoveryToken: AppRouteHandler<SetRecoveryTokenRoute>;
+	resetPassword: AppRouteHandler<ResetPasswordRoute>;
 }

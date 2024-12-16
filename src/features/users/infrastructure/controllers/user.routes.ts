@@ -2,145 +2,181 @@ import { createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import * as HttpStatusCodes from "stoker/http-status-codes";
 import { jsonContent, jsonContentRequired } from "stoker/openapi/helpers";
-import { createErrorSchema, IdParamsSchema } from "stoker/openapi/schemas";
-import { createUserSchema } from "@/users/application/dtos/create-user.dto";
-import { updateUserSchema } from "@/users/application/dtos/update-user.dto";
-
-const UserResponseSchema = z
-	.object({
-		id: z.number(),
-		username: z.string(),
-		email: z.string(),
-		name: z.string(),
-		active: z.boolean(),
-		registrationDate: z.string(),
-	})
-	.transform((user) => {
-		return {
-			...user,
-			passwordHash: undefined,
-			recoveryToken: undefined,
-			recoveryTokenExpires: undefined,
-		};
-	});
-
-const PasswordResetRequestSchema = z.object({
-	email: z.string().email(),
-});
-
-const PasswordResetSchema = z.object({
-	token: z.string(),
-	password: z.string().min(8),
-});
+import {
+	createUserSchema,
+	selectUsersSchema,
+	updateUserSchema,
+} from "@/users/application/dtos/user.dto";
+import { createErrorSchema } from "stoker/openapi/schemas";
 
 const tags = ["Users"];
 
-export const routes = {
-	list: createRoute({
-		path: "/users",
-		method: "get",
-		tags,
-		responses: {
-			[HttpStatusCodes.OK]: jsonContent(
-				z.array(UserResponseSchema),
-				"The list of users"
-			),
-		},
-	}),
-
-	create: createRoute({
-		path: "/users",
-		method: "post",
-		request: {
-			body: jsonContentRequired(createUserSchema, "The user to create"),
-		},
-		tags,
-		responses: {
-			[HttpStatusCodes.CREATED]: jsonContent(
-				UserResponseSchema,
-				"The created user"
-			),
-			[HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
-				createErrorSchema(createUserSchema),
-				"The validation error(s)"
-			),
-		},
-	}),
-
-	getOne: createRoute({
-		path: "/users/{id}",
-		method: "get",
-		request: {
-			params: IdParamsSchema,
-		},
-		tags,
-		responses: {
-			[HttpStatusCodes.OK]: jsonContent(
-				UserResponseSchema,
-				"The requested user"
-			),
-			[HttpStatusCodes.NOT_FOUND]: jsonContent(
-				z.object({ message: z.string() }),
-				"User not found"
-			),
-		},
-	}),
-
-	update: createRoute({
-		path: "/users/{id}",
-		method: "patch",
-		request: {
-			params: IdParamsSchema,
-			body: jsonContentRequired(updateUserSchema, "The user updates"),
-		},
-		tags,
-		responses: {
-			[HttpStatusCodes.OK]: jsonContent(UserResponseSchema, "The updated user"),
-			[HttpStatusCodes.NOT_FOUND]: jsonContent(
-				z.object({ message: z.string() }),
-				"User not found"
-			),
-			[HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
-				createErrorSchema(updateUserSchema),
-				"The validation error(s)"
-			),
-		},
-	}),
-
-	delete: createRoute({
-		path: "/users/{id}",
-		method: "delete",
-		request: {
-			params: IdParamsSchema,
-		},
-		tags,
-		responses: {
-			[HttpStatusCodes.NO_CONTENT]: {
-				description: "User deleted successfully",
+export const list = createRoute({
+	path: "/users",
+	method: "get",
+	tags,
+	responses: {
+		[HttpStatusCodes.OK]: jsonContent(
+			z.array(selectUsersSchema),
+			"List of users"
+		),
+		[HttpStatusCodes.INTERNAL_SERVER_ERROR]: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						error: z.string(),
+					}),
+				},
 			},
-			[HttpStatusCodes.NOT_FOUND]: jsonContent(
-				z.object({ message: z.string() }),
-				"User not found"
-			),
+			description: "Internal server error",
 		},
-	}),
+	},
+});
 
-	resetPassword: createRoute({
-		path: "/users/reset-password",
-		method: "post",
-		request: {
-			body: jsonContentRequired(PasswordResetSchema, "Password reset data"),
+export const create = createRoute({
+	path: "/users",
+	method: "post",
+	tags,
+	request: {
+		body: jsonContentRequired(createUserSchema, "User creation data"),
+	},
+	responses: {
+		[HttpStatusCodes.CREATED]: jsonContent(
+			selectUsersSchema,
+			"User created successfully"
+		),
+		[HttpStatusCodes.BAD_REQUEST]: jsonContent(
+			createErrorSchema(createUserSchema),
+			"Invalid user data"
+		),
+		[HttpStatusCodes.CONFLICT]: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						error: z.string(),
+					}),
+				},
+			},
+			description: "Email or username already exists",
 		},
-		tags,
-		responses: {
-			[HttpStatusCodes.OK]: jsonContent(
-				z.object({ message: z.string() }),
-				"Password reset successful"
-			),
-			[HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
-				z.object({ message: z.string() }),
-				"Invalid or expired token"
-			),
+	},
+});
+
+export const update = createRoute({
+	path: "/users/:id",
+	method: "patch",
+	tags,
+	request: {
+		body: jsonContentRequired(updateUserSchema, "User update data"),
+		params: z.object({
+			id: z.string().regex(/^\d+$/).transform(Number),
+		}),
+	},
+	responses: {
+		[HttpStatusCodes.OK]: jsonContent(
+			selectUsersSchema,
+			"User updated successfully"
+		),
+		[HttpStatusCodes.NOT_FOUND]: {
+			description: "User not found",
 		},
-	}),
-};
+		[HttpStatusCodes.BAD_REQUEST]: jsonContent(
+			createErrorSchema(updateUserSchema),
+			"Invalid update data"
+		),
+		[HttpStatusCodes.CONFLICT]: {
+			description: "Email or username already exists",
+		},
+	},
+});
+
+export const delete_ = createRoute({
+	path: "/users/:id",
+	method: "delete",
+	tags,
+	request: {
+		params: z.object({
+			id: z.string().regex(/^\d+$/).transform(Number),
+		}),
+	},
+	responses: {
+		[HttpStatusCodes.OK]: jsonContent(
+			z.object({ success: z.boolean() }),
+			"User deleted successfully"
+		),
+		[HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
+			createErrorSchema(z.object({ id: z.number() })),
+			"Invalid id error"
+		),
+		[HttpStatusCodes.NOT_FOUND]: {
+			description: "User not found",
+		},
+	},
+});
+
+export const getById = createRoute({
+	path: "/users/:id",
+	method: "get",
+	tags,
+	request: {
+		params: z.object({
+			id: z.string().regex(/^\d+$/).transform(Number),
+		}),
+	},
+	responses: {
+		[HttpStatusCodes.OK]: jsonContent(
+			selectUsersSchema,
+			"User retrieved successfully"
+		),
+		[HttpStatusCodes.NOT_FOUND]: { description: "User not found" },
+	},
+});
+
+export const setRecoveryToken = createRoute({
+	path: "/users/recovery-token",
+	method: "post",
+	tags,
+	request: {
+		body: jsonContentRequired(
+			z.object({ id: z.number() }),
+			"User ID for recovery token"
+		),
+	},
+	responses: {
+		[HttpStatusCodes.OK]: jsonContent(
+			z.object({ token: z.string() }),
+			"Recovery token generated"
+		),
+		[HttpStatusCodes.NOT_FOUND]: { description: "User not found" },
+	},
+});
+
+export const resetPassword = createRoute({
+	path: "/users/reset-password",
+	method: "post",
+	tags,
+	request: {
+		body: jsonContent(
+			z.object({
+				token: z.string(),
+				newPassword: z.string().min(8),
+			}),
+			"Password reset data"
+		),
+	},
+	responses: {
+		[HttpStatusCodes.OK]: jsonContent(
+			z.object({ success: z.boolean() }),
+			"Password reset successful"
+		),
+		[HttpStatusCodes.BAD_REQUEST]: { description: "Invalid or expired token" },
+	},
+});
+
+export type ListRoute = typeof list;
+export type CreateRoute = typeof create;
+export type UpdateRoute = typeof update;
+export type DeleteRoute = typeof delete_;
+export type GetByIdRoute = typeof getById;
+export type SetRecoveryTokenRoute = typeof setRecoveryToken;
+export type ResetPasswordRoute = typeof resetPassword;
