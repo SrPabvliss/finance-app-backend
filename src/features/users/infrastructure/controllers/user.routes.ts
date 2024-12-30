@@ -10,23 +10,36 @@ import {
 import { createErrorSchema } from "stoker/openapi/schemas";
 
 const tags = ["Users"];
+const baseResponseSchema = <T extends z.ZodType>(schema: T) =>
+	z.object({
+		success: z.boolean(),
+		data: schema,
+		message: z.string(),
+	});
+
+const errorResponseSchema = z.object({
+	success: z.boolean(),
+	data: z.null(),
+	message: z.string(),
+});
 
 export const list = createRoute({
 	path: "/users",
 	method: "get",
 	tags,
 	responses: {
-		[HttpStatusCodes.OK]: jsonContent(
-			z.array(selectUsersSchema),
-
-			"List of users"
-		),
+		[HttpStatusCodes.OK]: {
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(z.array(selectUsersSchema)),
+				},
+			},
+			description: "Users retrieved successfully",
+		},
 		[HttpStatusCodes.INTERNAL_SERVER_ERROR]: {
 			content: {
 				"application/json": {
-					schema: z.object({
-						error: z.string(),
-					}),
+					schema: errorResponseSchema,
 				},
 			},
 			description: "Internal server error",
@@ -45,11 +58,7 @@ export const create = createRoute({
 		[HttpStatusCodes.CREATED]: {
 			content: {
 				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						data: selectUsersSchema,
-						message: z.string(),
-					}),
+					schema: baseResponseSchema(selectUsersSchema),
 				},
 			},
 			description: "User created successfully",
@@ -57,11 +66,7 @@ export const create = createRoute({
 		[HttpStatusCodes.BAD_REQUEST]: {
 			content: {
 				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						data: z.null(),
-						message: z.string(),
-					}),
+					schema: errorResponseSchema,
 				},
 			},
 			description: "Invalid user data",
@@ -69,11 +74,7 @@ export const create = createRoute({
 		[HttpStatusCodes.CONFLICT]: {
 			content: {
 				"application/json": {
-					schema: z.object({
-						success: z.boolean(),
-						data: z.null(),
-						message: z.string(),
-					}),
+					schema: errorResponseSchema,
 				},
 			},
 			description: "Email or username already exists",
@@ -92,21 +93,36 @@ export const update = createRoute({
 		}),
 	},
 	responses: {
-		[HttpStatusCodes.OK]: jsonContent(
-			{
-				status: z.literal("success"),
-				data: selectUsersSchema,
+		[HttpStatusCodes.OK]: {
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(selectUsersSchema),
+				},
 			},
-			"User updated successfully"
-		),
+			description: "User updated successfully",
+		},
 		[HttpStatusCodes.NOT_FOUND]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
 			description: "User not found",
 		},
-		[HttpStatusCodes.BAD_REQUEST]: jsonContent(
-			createErrorSchema(updateUserSchema),
-			"Invalid update data"
-		),
+		[HttpStatusCodes.BAD_REQUEST]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
+			description: "Invalid update data",
+		},
 		[HttpStatusCodes.CONFLICT]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
 			description: "Email or username already exists",
 		},
 	},
@@ -122,15 +138,20 @@ export const delete_ = createRoute({
 		}),
 	},
 	responses: {
-		[HttpStatusCodes.OK]: jsonContent(
-			z.object({ success: z.boolean() }),
-			"User deleted successfully"
-		),
-		[HttpStatusCodes.UNPROCESSABLE_ENTITY]: jsonContent(
-			createErrorSchema(z.object({ id: z.number() })),
-			"Invalid id error"
-		),
+		[HttpStatusCodes.OK]: {
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(z.object({ deleted: z.boolean() })),
+				},
+			},
+			description: "User deleted successfully",
+		},
 		[HttpStatusCodes.NOT_FOUND]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
 			description: "User not found",
 		},
 	},
@@ -146,11 +167,22 @@ export const getById = createRoute({
 		}),
 	},
 	responses: {
-		[HttpStatusCodes.OK]: jsonContent(
-			selectUsersSchema,
-			"User retrieved successfully"
-		),
-		[HttpStatusCodes.NOT_FOUND]: { description: "User not found" },
+		[HttpStatusCodes.OK]: {
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(selectUsersSchema),
+				},
+			},
+			description: "User retrieved successfully",
+		},
+		[HttpStatusCodes.NOT_FOUND]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
+			description: "User not found",
+		},
 	},
 });
 
@@ -165,11 +197,22 @@ export const setRecoveryToken = createRoute({
 		),
 	},
 	responses: {
-		[HttpStatusCodes.OK]: jsonContent(
-			z.object({ token: z.string() }),
-			"Recovery token generated"
-		),
-		[HttpStatusCodes.NOT_FOUND]: { description: "User not found" },
+		[HttpStatusCodes.OK]: {
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(z.object({ token: z.string() })),
+				},
+			},
+			description: "Recovery token generated successfully",
+		},
+		[HttpStatusCodes.NOT_FOUND]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
+			description: "User not found",
+		},
 	},
 });
 
@@ -187,11 +230,22 @@ export const resetPassword = createRoute({
 		),
 	},
 	responses: {
-		[HttpStatusCodes.OK]: jsonContent(
-			z.object({ success: z.boolean() }),
-			"Password reset successful"
-		),
-		[HttpStatusCodes.BAD_REQUEST]: { description: "Invalid or expired token" },
+		[HttpStatusCodes.OK]: {
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(z.object({ reset: z.boolean() })),
+				},
+			},
+			description: "Password reset successful",
+		},
+		[HttpStatusCodes.BAD_REQUEST]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
+			description: "Invalid or expired token",
+		},
 	},
 });
 
