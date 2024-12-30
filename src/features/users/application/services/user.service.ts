@@ -51,8 +51,12 @@ export class UserService implements IUserService {
 
 		if (!validation.isValid) {
 			return c.json(
-				createErrorResponse(`The ${validation.field} is already taken`),
-				HttpStatusCodes.BAD_REQUEST
+				{
+					success: false,
+					data: null,
+					message: `The ${validation.field} is already taken`,
+				},
+				HttpStatusCodes.CONFLICT
 			);
 		}
 
@@ -65,7 +69,14 @@ export class UserService implements IUserService {
 			active: true,
 		});
 
-		return c.json(UserApiAdapter.toApiResponse(user), HttpStatusCodes.CREATED);
+		return c.json(
+			{
+				success: true,
+				data: UserApiAdapter.toApiResponse(user),
+				message: "User created successfully",
+			},
+			HttpStatusCodes.CREATED
+		);
 	});
 
 	update = createHandler<UpdateRoute>(async (c) => {

@@ -18,6 +18,7 @@ export const list = createRoute({
 	responses: {
 		[HttpStatusCodes.OK]: jsonContent(
 			z.array(selectUsersSchema),
+
 			"List of users"
 		),
 		[HttpStatusCodes.INTERNAL_SERVER_ERROR]: {
@@ -41,19 +42,37 @@ export const create = createRoute({
 		body: jsonContentRequired(createUserSchema, "User creation data"),
 	},
 	responses: {
-		[HttpStatusCodes.CREATED]: jsonContent(
-			selectUsersSchema,
-			"User created successfully"
-		),
-		[HttpStatusCodes.BAD_REQUEST]: jsonContent(
-			createErrorSchema(createUserSchema),
-			"Invalid user data"
-		),
+		[HttpStatusCodes.CREATED]: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						success: z.boolean(),
+						data: selectUsersSchema,
+						message: z.string(),
+					}),
+				},
+			},
+			description: "User created successfully",
+		},
+		[HttpStatusCodes.BAD_REQUEST]: {
+			content: {
+				"application/json": {
+					schema: z.object({
+						success: z.boolean(),
+						data: z.null(),
+						message: z.string(),
+					}),
+				},
+			},
+			description: "Invalid user data",
+		},
 		[HttpStatusCodes.CONFLICT]: {
 			content: {
 				"application/json": {
 					schema: z.object({
-						error: z.string(),
+						success: z.boolean(),
+						data: z.null(),
+						message: z.string(),
 					}),
 				},
 			},
@@ -74,7 +93,10 @@ export const update = createRoute({
 	},
 	responses: {
 		[HttpStatusCodes.OK]: jsonContent(
-			selectUsersSchema,
+			{
+				status: z.literal("success"),
+				data: selectUsersSchema,
+			},
 			"User updated successfully"
 		),
 		[HttpStatusCodes.NOT_FOUND]: {

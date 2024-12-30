@@ -26,16 +26,6 @@ export const users = pgTable("users", {
 	recovery_token_expires: timestamp("recovery_token_expires"),
 });
 
-export const profiles = pgTable("profiles", {
-	id: serial("id").primaryKey(),
-	user_id: integer("user_id")
-		.references(() => users.id)
-		.notNull(),
-	full_name: varchar("full_name"),
-	profile_picture: varchar("profile_picture"),
-	settings: json("settings").default({}).notNull(),
-});
-
 export const payment_methods = pgTable("payment_methods", {
 	id: serial("id").primaryKey(),
 	user_id: integer("user_id")
