@@ -15,6 +15,7 @@
 			"@/users/*": ["./src/features/users/*"],
 			"@/auth/*": ["./src/features/auth/*"],
 			"@/payment-methods/*": ["./src/features/payment-methods/*"],
+			"@/transactions/*": ["./src/features/transactions/*"],
 			"@/core/*": ["./src/core/*"]
 		}
 	}
