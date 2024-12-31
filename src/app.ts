@@ -5,13 +5,21 @@ import users from "@/users/infrastructure/controllers/user.controller";
 import paymentMethods from "@/payment-methods/infrastructure/controllers/payment-method.controller";
 import transactions from "@/transactions/infrastructure/controllers/transaction.controller";
 import goals from "@/goals/infrastucture/controllers/goal.controller";
+import budgets from "@/budgets/infrastructure/controllers/budget.controller";
 import DatabaseConnection from "@/db";
 
 const app = createApp();
 
 configureOpenAPI(app);
 
-const routes = [index, users, paymentMethods, transactions, goals] as const;
+const routes = [
+	index,
+	users,
+	paymentMethods,
+	transactions,
+	goals,
+	budgets,
+] as const;
 
 app.get("/debug/db-status", (c) => {
 	const db = DatabaseConnection.getInstance();
