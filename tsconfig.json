@@ -16,6 +16,7 @@
 			"@/auth/*": ["./src/features/auth/*"],
 			"@/payment-methods/*": ["./src/features/payment-methods/*"],
 			"@/transactions/*": ["./src/features/transactions/*"],
+			"@/goals/*": ["./src/features/goals/*"],
 			"@/core/*": ["./src/core/*"]
 		}
 	}
