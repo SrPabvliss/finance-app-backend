@@ -15,8 +15,7 @@ import {
 } from "@/users/infrastructure/controllers/user.routes";
 import * as HttpStatusCodes from "stoker/http-status-codes";
 import { createHandler } from "@/core/infrastructure/lib/handler.wrapper,";
-import { UserApiAdapter } from "@/users/infrastructure/adapters/user.-api.adapter";
-import { createErrorResponse } from "@/shared/utils/error.util";
+import { UserApiAdapter } from "@/users/infrastructure/adapters/user-api.adapter";
 
 export class UserService implements IUserService {
 	private static instance: UserService;

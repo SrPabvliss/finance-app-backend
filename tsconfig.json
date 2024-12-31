@@ -13,6 +13,8 @@
 			"@/schema": ["./src/core/infrastructure/database/schema.ts"],
 			"@/shared/*": ["./src/shared/*"],
 			"@/users/*": ["./src/features/users/*"],
+			"@/auth/*": ["./src/features/auth/*"],
+			"@/payment-methods/*": ["./src/features/payment-methods/*"],
 			"@/core/*": ["./src/core/*"]
 		}
 	}
