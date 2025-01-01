@@ -94,6 +94,7 @@ export const transactionFiltersSchema = z.object({
 	type: z.enum(["INCOME", "EXPENSE"]).optional(),
 	category: z.string().optional(),
 	payment_method_id: z.number().optional(),
+	scheduled_transaction_id: z.number().optional(),
 	min_amount: z
 		.string()
 		.transform((val) => Number(val))
@@ -105,7 +106,6 @@ export const transactionFiltersSchema = z.object({
 		.pipe(z.number())
 		.optional(),
 });
-
 export type CreateTransactionDTO = z.infer<typeof createTransactionSchema>;
 export type UpdateTransactionDTO = z.infer<typeof updateTransactionSchema>;
 export type TransactionFilters = z.infer<typeof transactionFiltersSchema>;

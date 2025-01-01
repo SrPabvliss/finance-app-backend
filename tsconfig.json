@@ -18,6 +18,7 @@
 			"@/transactions/*": ["./src/features/transactions/*"],
 			"@/goals/*": ["./src/features/goals/*"],
 			"@/budgets/*": ["./src/features/budgets/*"],
+			"@/scheduled-transactions/*": ["./src/features/scheduled-transactions/*"],
 			"@/core/*": ["./src/core/*"]
 		}
 	}

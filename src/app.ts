@@ -6,10 +6,13 @@ import paymentMethods from "@/payment-methods/infrastructure/controllers/payment
 import transactions from "@/transactions/infrastructure/controllers/transaction.controller";
 import goals from "@/goals/infrastucture/controllers/goal.controller";
 import budgets from "@/budgets/infrastructure/controllers/budget.controller";
+import scheduledTransactions from "@/scheduled-transactions/infrastructure/controllers/scheduled-transaction.controller";
 import DatabaseConnection from "@/db";
+import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 
 const app = createApp();
 
+startScheduledTransactionsJob();
 configureOpenAPI(app);
 
 const routes = [
@@ -19,6 +22,7 @@ const routes = [
 	transactions,
 	goals,
 	budgets,
+	scheduledTransactions,
 ] as const;
 
 app.get("/debug/db-status", (c) => {
