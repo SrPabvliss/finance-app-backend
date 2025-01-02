@@ -19,6 +19,7 @@
 			"@/goals/*": ["./src/features/goals/*"],
 			"@/budgets/*": ["./src/features/budgets/*"],
 			"@/scheduled-transactions/*": ["./src/features/scheduled-transactions/*"],
+			"@/debts/*": ["./src/features/debts/*"],
 			"@/core/*": ["./src/core/*"]
 		}
 	}

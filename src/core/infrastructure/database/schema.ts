@@ -132,7 +132,5 @@ export const debts = pgTable("debts", {
 	}).notNull(),
 	due_date: date("due_date").notNull(),
 	paid: boolean("paid").default(false).notNull(),
-	creditor_id: integer("creditor_id")
-		.references(() => users.id)
-		.notNull(),
+	creditor_id: integer("creditor_id").references(() => users.id),
 });
