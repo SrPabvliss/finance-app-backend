@@ -20,6 +20,7 @@
 			"@/budgets/*": ["./src/features/budgets/*"],
 			"@/scheduled-transactions/*": ["./src/features/scheduled-transactions/*"],
 			"@/debts/*": ["./src/features/debts/*"],
+			"@/friends/*": ["./src/features/friends/*"],
 			"@/core/*": ["./src/core/*"]
 		}
 	}
