@@ -9,6 +9,7 @@ import budgets from "@/budgets/infrastructure/controllers/budget.controller";
 import scheduledTransactions from "@/scheduled-transactions/infrastructure/controllers/scheduled-transaction.controller";
 import debts from "@/debts/infrastructure/controllers/debt.controller";
 import friends from "@/friends/infrastructure/controllers/friend.controller";
+import auth from "@/auth/infrastructure/controllers/auth.controller";
 import DatabaseConnection from "@/db";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
 
@@ -19,6 +20,7 @@ configureOpenAPI(app);
 
 const routes = [
 	index,
+	auth,
 	users,
 	paymentMethods,
 	transactions,
