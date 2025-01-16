@@ -11,7 +11,11 @@ const friendUtils = FriendUtilsService.getInstance(
 	friendRepository,
 	userRepository
 );
-const friendService = FriendService.getInstance(friendRepository, friendUtils);
+const friendService = FriendService.getInstance(
+	friendRepository,
+	friendUtils,
+	userRepository
+);
 
 const router = createRouter()
 	.openapi(routes.list, friendService.getAll)

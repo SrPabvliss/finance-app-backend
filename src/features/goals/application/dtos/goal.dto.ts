@@ -12,7 +12,7 @@ export const createGoalSchema = goalBaseSchema
 			.number()
 			.min(0, "Current amount cannot be negative")
 			.optional(),
-		end_date: z.string().datetime(),
+		end_date: z.string().date(),
 		shared_user_id: z.number().optional(),
 	})
 	.omit({
@@ -29,7 +29,7 @@ export const updateGoalSchema = goalBaseSchema
 			.number()
 			.min(0, "Current amount cannot be negative")
 			.optional(),
-		end_date: z.string().datetime().optional(),
+		end_date: z.string().date().optional(),
 		shared_user_id: z.number().optional().nullable(),
 	})
 	.partial()

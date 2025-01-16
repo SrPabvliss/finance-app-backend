@@ -93,8 +93,16 @@ export const transactionFiltersSchema = z.object({
 	endDate: z.string().datetime().optional(),
 	type: z.enum(["INCOME", "EXPENSE"]).optional(),
 	category: z.string().optional(),
-	payment_method_id: z.number().optional(),
-	scheduled_transaction_id: z.number().optional(),
+	payment_method_id: z
+		.string()
+		.transform((val) => Number(val))
+		.pipe(z.number())
+		.optional(),
+	scheduled_transaction_id: z
+		.string()
+		.transform((val) => Number(val))
+		.pipe(z.number())
+		.optional(),
 	min_amount: z
 		.string()
 		.transform((val) => Number(val))

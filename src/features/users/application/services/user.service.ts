@@ -10,6 +10,7 @@ import {
 	GetByIdRoute,
 	ListRoute,
 	ResetPasswordRoute,
+	SearchByEmailRoute,
 	SetRecoveryTokenRoute,
 	UpdateRoute,
 } from "@/users/infrastructure/controllers/user.routes";
@@ -34,6 +35,36 @@ export class UserService implements IUserService {
 		}
 		return UserService.instance;
 	}
+
+	searchByEmail = createHandler<SearchByEmailRoute>(async (c) => {
+		const { email } = c.req.valid("query");
+
+		const user = await this.userRepository.findByEmail(email);
+		if (!user) {
+			return c.json(
+				{
+					success: false,
+					data: null,
+					message: "User not found",
+				},
+				HttpStatusCodes.NOT_FOUND
+			);
+		}
+
+		return c.json(
+			{
+				success: true,
+				data: {
+					id: user.id,
+					email: user.email,
+					name: user.name,
+					username: user.username,
+				},
+				message: "User found successfully",
+			},
+			HttpStatusCodes.OK
+		);
+	});
 
 	getAll = createHandler<ListRoute>(async (c) => {
 		const users = await this.userRepository.findAll();

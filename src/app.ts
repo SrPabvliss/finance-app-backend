@@ -12,6 +12,7 @@ import friends from "@/friends/infrastructure/controllers/friend.controller";
 import auth from "@/auth/infrastructure/controllers/auth.controller";
 import DatabaseConnection from "@/db";
 import { startScheduledTransactionsJob } from "./core/infrastructure/cron/scheduled-transactions.cron";
+import { cors } from "hono/cors";
 
 const app = createApp();
 
@@ -38,6 +39,8 @@ app.get("/debug/db-status", (c) => {
 		timestamp: new Date().toISOString(),
 	});
 });
+
+app.use(cors());
 
 routes.forEach((route) => {
 	app.route("/", route);

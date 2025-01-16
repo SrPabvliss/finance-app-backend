@@ -245,7 +245,7 @@ export const getMonthlyBalance = createRoute({
 			userId: z.string().regex(/^\d+$/).transform(Number),
 		}),
 		query: z.object({
-			month: z.string().datetime(),
+			month: z.string().date(),
 		}),
 	},
 	responses: {
@@ -283,8 +283,8 @@ export const getCategoryTotals = createRoute({
 			userId: z.string().regex(/^\d+$/).transform(Number),
 		}),
 		query: z.object({
-			startDate: z.string().datetime(),
-			endDate: z.string().datetime(),
+			startDate: z.string().date(),
+			endDate: z.string().date(),
 		}),
 	},
 	responses: {
@@ -314,6 +314,51 @@ export const getCategoryTotals = createRoute({
 	},
 });
 
+export const getMonthlyTrends = createRoute({
+	path: "/users/:userId/trends/monthly",
+	method: "get",
+	tags,
+	request: {
+		params: z.object({
+			userId: z.string().regex(/^\d+$/).transform(Number),
+		}),
+	},
+	responses: {
+		[HttpStatusCodes.OK]: {
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(
+						z.array(
+							z.object({
+								month: z.string(),
+								income: z.number(),
+								expense: z.number(),
+							})
+						)
+					),
+				},
+			},
+			description: "Monthly trends retrieved successfully",
+		},
+		[HttpStatusCodes.NOT_FOUND]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
+			description: "User not found",
+		},
+		[HttpStatusCodes.INTERNAL_SERVER_ERROR]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
+			description: "Error retrieving monthly trends",
+		},
+	},
+});
+
 export type ListRoute = typeof list;
 export type GetByIdRoute = typeof getById;
 export type ListByUserRoute = typeof listByUser;
@@ -323,3 +368,4 @@ export type UpdateRoute = typeof update;
 export type DeleteRoute = typeof delete_;
 export type GetMonthlyBalanceRoute = typeof getMonthlyBalance;
 export type GetCategoryTotalsRoute = typeof getCategoryTotals;
+export type GetMonthlyTrendsRoute = typeof getMonthlyTrends;

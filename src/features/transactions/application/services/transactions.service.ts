@@ -10,6 +10,7 @@ import {
 	GetByIdRoute,
 	GetCategoryTotalsRoute,
 	GetMonthlyBalanceRoute,
+	GetMonthlyTrendsRoute,
 	ListByUserRoute,
 	ListRoute,
 	UpdateRoute,
@@ -200,6 +201,8 @@ export class TransactionService implements ITransactionService {
 		const id = c.req.param("id");
 		const data = c.req.valid("json");
 
+		console.log(data);
+
 		const transaction = await this.transactionRepository.findById(Number(id));
 		if (!transaction) {
 			return c.json(
@@ -348,5 +351,48 @@ export class TransactionService implements ITransactionService {
 			},
 			HttpStatusCodes.OK
 		);
+	});
+
+	getMonthlyTrends = createHandler<GetMonthlyTrendsRoute>(async (c) => {
+		const userId = c.req.param("userId");
+
+		const userValidation = await this.transactionUtils.validateUser(
+			Number(userId)
+		);
+		if (!userValidation.isValid) {
+			return c.json(
+				{
+					success: false,
+					data: null,
+					message: "User not found",
+				},
+				HttpStatusCodes.NOT_FOUND
+			);
+		}
+
+		try {
+			const trends = await this.transactionRepository.getMonthlyTrends(
+				Number(userId)
+			);
+
+			return c.json(
+				{
+					success: true,
+					data: trends,
+					message: "Monthly trends retrieved successfully",
+				},
+				HttpStatusCodes.OK
+			);
+		} catch (error) {
+			console.error("Error getting monthly trends:", error);
+			return c.json(
+				{
+					success: false,
+					data: null,
+					message: "Error retrieving monthly trends",
+				},
+				HttpStatusCodes.INTERNAL_SERVER_ERROR
+			);
+		}
 	});
 }

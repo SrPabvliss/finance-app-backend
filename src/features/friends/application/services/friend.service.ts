@@ -11,31 +11,42 @@ import {
 	ListByUserRoute,
 	ListRoute,
 } from "@/friends/infrastructure/controllers/friend.routes";
+import { IUserRepository } from "@/users/domain/ports/user-repository.port";
 
 export class FriendService implements IFriendService {
 	private static instance: FriendService;
 
 	constructor(
 		private readonly friendRepository: IFriendRepository,
-		private readonly friendUtils: FriendUtilsService
+		private readonly friendUtils: FriendUtilsService,
+		private readonly userRepository: IUserRepository
 	) {}
 
 	public static getInstance(
 		friendRepository: IFriendRepository,
-		friendUtils: FriendUtilsService
+		friendUtils: FriendUtilsService,
+		userRepository: IUserRepository
 	): FriendService {
 		if (!FriendService.instance) {
-			FriendService.instance = new FriendService(friendRepository, friendUtils);
+			FriendService.instance = new FriendService(
+				friendRepository,
+				friendUtils,
+				userRepository
+			);
 		}
 		return FriendService.instance;
 	}
 
 	getAll = createHandler<ListRoute>(async (c) => {
 		const friends = await this.friendRepository.findAll();
+		const response = await FriendApiAdapter.toApiResponseList(
+			friends,
+			this.userRepository
+		);
 		return c.json(
 			{
 				success: true,
-				data: FriendApiAdapter.toApiResponseList(friends),
+				data: response,
 				message: "Friends retrieved successfully",
 			},
 			HttpStatusCodes.OK
@@ -60,7 +71,7 @@ export class FriendService implements IFriendService {
 		return c.json(
 			{
 				success: true,
-				data: FriendApiAdapter.toApiResponse(friend),
+				data: await FriendApiAdapter.toApiResponse(friend, this.userRepository),
 				message: "Friend retrieved successfully",
 			},
 			HttpStatusCodes.OK
@@ -82,11 +93,18 @@ export class FriendService implements IFriendService {
 			);
 		}
 
-		const friends = await this.friendRepository.findByUserId(Number(userId));
+		const friendships = await this.friendRepository.findByUserId(
+			Number(userId)
+		);
+		const response = await FriendApiAdapter.toApiResponseList(
+			friendships,
+			this.userRepository
+		);
+
 		return c.json(
 			{
 				success: true,
-				data: FriendApiAdapter.toApiResponseList(friends),
+				data: response,
 				message: "User friends retrieved successfully",
 			},
 			HttpStatusCodes.OK
@@ -94,11 +112,10 @@ export class FriendService implements IFriendService {
 	});
 
 	create = createHandler<CreateRoute>(async (c) => {
-		const data = c.req.valid("json");
+		const { user_id, friend_email } = c.req.valid("json");
 
-		// Validar que el usuario existe
-		const userValidation = await this.friendUtils.validateUser(data.user_id);
-		if (!userValidation.isValid) {
+		const friend = await this.userRepository.findByEmail(friend_email);
+		if (!friend) {
 			return c.json(
 				{
 					success: false,
@@ -109,10 +126,9 @@ export class FriendService implements IFriendService {
 			);
 		}
 
-		// Validar la amistad
 		const friendshipValidation = await this.friendUtils.validateFriendship(
-			data.user_id,
-			data.friend_id
+			user_id,
+			friend.id
 		);
 
 		if (!friendshipValidation.isValid) {
@@ -126,15 +142,20 @@ export class FriendService implements IFriendService {
 			);
 		}
 
-		const friend = await this.friendRepository.create({
-			userId: data.user_id,
-			friendId: data.friend_id,
+		const friendship = await this.friendRepository.create({
+			userId: user_id,
+			friendId: friend.id,
 		});
+
+		const response = await FriendApiAdapter.toApiResponse(
+			friendship,
+			this.userRepository
+		);
 
 		return c.json(
 			{
 				success: true,
-				data: FriendApiAdapter.toApiResponse(friend),
+				data: response,
 				message: "Friend added successfully",
 			},
 			HttpStatusCodes.CREATED

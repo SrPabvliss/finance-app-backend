@@ -31,4 +31,12 @@ export interface ITransactionRepository {
 			total: number;
 		}>
 	>;
+
+	getMonthlyTrends(userId: number): Promise<
+		Array<{
+			month: string;
+			income: number;
+			expense: number;
+		}>
+	>;
 }

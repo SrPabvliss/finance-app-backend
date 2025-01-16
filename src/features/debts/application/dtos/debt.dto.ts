@@ -9,7 +9,7 @@ export const createDebtSchema = debtBaseSchema
 	.extend({
 		original_amount: z.number().positive("Amount must be positive"),
 		pending_amount: z.number().positive("Pending amount must be positive"),
-		due_date: z.string().datetime(),
+		due_date: z.string().date(),
 		paid: z.boolean().default(false),
 		creditor_id: z.number().optional(),
 	})
@@ -24,7 +24,7 @@ export const updateDebtSchema = debtBaseSchema
 			.number()
 			.positive("Pending amount must be positive")
 			.optional(),
-		due_date: z.string().datetime().optional(),
+		due_date: z.string().date().optional(),
 		paid: z.boolean().optional(),
 	})
 	.partial()

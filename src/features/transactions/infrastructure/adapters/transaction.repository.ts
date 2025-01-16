@@ -4,6 +4,10 @@ import { transactions } from "@/schema";
 import { ITransactionRepository } from "../../domain/ports/transaction-repository.port";
 import { ITransaction } from "../../domain/entities/ITransaction";
 import { TransactionFilters } from "../../application/dtos/transaction.dto";
+import {
+	MonthlyTrendData,
+	MonthlyTrendResult,
+} from "@/transactions/domain/entities/ITrends";
 
 export class PgTransactionRepository implements ITransactionRepository {
 	private db = DatabaseConnection.getInstance().db;
@@ -170,8 +174,12 @@ export class PgTransactionRepository implements ITransactionRepository {
 		totalExpense: number;
 		balance: number;
 	}> {
-		const startDate = new Date(month.getFullYear(), month.getMonth(), 1);
-		const endDate = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+		const year = month.getUTCFullYear();
+		const monthNumber = month.getUTCMonth();
+
+		// Crear fechas en UTC
+		const startDate = new Date(Date.UTC(year, monthNumber, 1));
+		const endDate = new Date(Date.UTC(year, monthNumber + 1, 0));
 
 		const result = await this.db
 			.select({
@@ -210,6 +218,31 @@ export class PgTransactionRepository implements ITransactionRepository {
 		startDate: Date,
 		endDate: Date
 	): Promise<Array<{ category: string; total: number }>> {
+		// Convertir las fechas a UTC
+		const utcStartDate = new Date(
+			Date.UTC(
+				startDate.getUTCFullYear(),
+				startDate.getUTCMonth(),
+				startDate.getUTCDate()
+			)
+		);
+
+		const utcEndDate = new Date(
+			Date.UTC(
+				endDate.getUTCFullYear(),
+				endDate.getUTCMonth(),
+				endDate.getUTCDate(),
+				23,
+				59,
+				59,
+				999
+			)
+		);
+
+		// Podemos añadir logs para debug
+		console.log("UTC Start date:", utcStartDate.toISOString());
+		console.log("UTC End date:", utcEndDate.toISOString());
+
 		const result = await this.db
 			.select({
 				category: transactions.category,
@@ -219,7 +252,7 @@ export class PgTransactionRepository implements ITransactionRepository {
 			.where(
 				and(
 					eq(transactions.user_id, userId),
-					between(transactions.date, startDate, endDate)
+					between(transactions.date, utcStartDate, utcEndDate)
 				)
 			)
 			.groupBy(transactions.category);
@@ -229,7 +262,6 @@ export class PgTransactionRepository implements ITransactionRepository {
 			total: Number(row.total) || 0,
 		}));
 	}
-
 	private mapToEntity(raw: any): ITransaction {
 		return {
 			id: raw.id,
@@ -243,5 +275,65 @@ export class PgTransactionRepository implements ITransactionRepository {
 			scheduledTransactionId: raw.scheduled_transaction_id,
 			debtId: raw.debt_id,
 		};
+	}
+
+	// En transaction.repository.ts, modifiquemos el método getMonthlyTrends:
+
+	async getMonthlyTrends(userId: number): Promise<MonthlyTrendData[]> {
+		console.log("Getting monthly trends for user:", userId);
+
+		try {
+			const result = await this.db
+				.select({
+					month: sql<string>`date_trunc('month', ${transactions.date})::date`,
+					type: transactions.type,
+					total: sql<string>`COALESCE(sum(${transactions.amount}::numeric), 0)`,
+				})
+				.from(transactions)
+				.where(eq(transactions.user_id, userId))
+				.groupBy(
+					sql`date_trunc('month', ${transactions.date})::date`,
+					transactions.type
+				)
+				.orderBy(sql`date_trunc('month', ${transactions.date})::date`);
+
+			console.log("Raw query result:", result);
+
+			if (!result || result.length === 0) {
+				return [];
+			}
+
+			const monthlyData: Record<string, MonthlyTrendData> = {};
+
+			// Modificar esta parte para trabajar con el string directamente
+			result.forEach(({ month, type, total }) => {
+				// month ya viene como YYYY-MM-DD, solo necesitamos YYYY-MM
+				const monthKey = month.substring(0, 7);
+
+				if (!monthlyData[monthKey]) {
+					monthlyData[monthKey] = {
+						month: monthKey,
+						income: 0,
+						expense: 0,
+					};
+				}
+
+				if (type === "INCOME") {
+					monthlyData[monthKey].income = Number(total) || 0;
+				} else {
+					monthlyData[monthKey].expense = Number(total) || 0;
+				}
+			});
+
+			const trends = Object.values(monthlyData).sort(
+				(a, b) => new Date(a.month).getTime() - new Date(b.month).getTime()
+			);
+
+			console.log("Processed trends:", trends);
+			return trends;
+		} catch (error) {
+			console.error("Error in getMonthlyTrends:", error);
+			throw error;
+		}
 	}
 }

@@ -115,17 +115,17 @@ export class BudgetUtilsService {
 		}
 
 		const budgetMonth = new Date(budget.month);
-		const currentMonth = new Date();
-		if (
-			budgetMonth.getMonth() !== currentMonth.getMonth() ||
-			budgetMonth.getFullYear() !== currentMonth.getFullYear()
-		) {
-			return {
-				isValid: false,
-				message: "Cannot update amount for past or future budgets",
-				budget,
-			};
-		}
+		// const currentMonth = new Date();
+		// if (
+		// 	budgetMonth.getMonth() !== currentMonth.getMonth() ||
+		// 	budgetMonth.getFullYear() !== currentMonth.getFullYear()
+		// ) {
+		// 	return {
+		// 		isValid: false,
+		// 		message: "Cannot update amount for past or future budgets",
+		// 		budget,
+		// 	};
+		// }
 
 		return {
 			isValid: true,

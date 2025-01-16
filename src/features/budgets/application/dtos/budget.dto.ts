@@ -25,7 +25,7 @@ export const createBudgetSchema = budgetBaseSchema
 			.number()
 			.min(0, "Current amount cannot be negative")
 			.optional(),
-		month: z.string().datetime(),
+		month: z.string().date(),
 		shared_user_id: z.number().optional(),
 	})
 	.omit({
@@ -43,7 +43,7 @@ export const updateBudgetSchema = budgetBaseSchema
 			.number()
 			.min(0, "Current amount cannot be negative")
 			.optional(),
-		month: z.string().datetime().optional(),
+		month: z.string().date().optional(),
 		shared_user_id: z.number().optional().nullable(),
 	})
 	.partial()

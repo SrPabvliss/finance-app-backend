@@ -5,6 +5,7 @@ import * as HttpStatusCodes from "stoker/http-status-codes";
 import { jsonContent, jsonContentRequired } from "stoker/openapi/helpers";
 import {
 	createFriendSchema,
+	FriendResponseSchema,
 	selectFriendSchema,
 } from "@/friends/application/dtos/friend.dto";
 
@@ -31,7 +32,7 @@ export const list = createRoute({
 		[HttpStatusCodes.OK]: {
 			content: {
 				"application/json": {
-					schema: baseResponseSchema(z.array(selectFriendSchema)),
+					schema: baseResponseSchema(z.array(FriendResponseSchema)),
 				},
 			},
 			description: "Friends retrieved successfully",
@@ -52,7 +53,7 @@ export const getById = createRoute({
 		[HttpStatusCodes.OK]: {
 			content: {
 				"application/json": {
-					schema: baseResponseSchema(selectFriendSchema),
+					schema: baseResponseSchema(FriendResponseSchema),
 				},
 			},
 			description: "Friend retrieved successfully",
@@ -81,7 +82,7 @@ export const listByUser = createRoute({
 		[HttpStatusCodes.OK]: {
 			content: {
 				"application/json": {
-					schema: baseResponseSchema(z.array(selectFriendSchema)),
+					schema: baseResponseSchema(z.array(FriendResponseSchema)),
 				},
 			},
 			description: "User friends retrieved successfully",
@@ -108,7 +109,7 @@ export const create = createRoute({
 		[HttpStatusCodes.CREATED]: {
 			content: {
 				"application/json": {
-					schema: baseResponseSchema(selectFriendSchema),
+					schema: baseResponseSchema(FriendResponseSchema),
 				},
 			},
 			description: "Friend added successfully",

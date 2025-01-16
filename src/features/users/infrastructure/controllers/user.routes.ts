@@ -23,6 +23,42 @@ const errorResponseSchema = z.object({
 	message: z.string(),
 });
 
+export const searchByEmail = createRoute({
+	path: "/users/search",
+	method: "get",
+	tags,
+	request: {
+		query: z.object({
+			email: z.string().email(),
+		}),
+	},
+	responses: {
+		[HttpStatusCodes.OK]: {
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(
+						z.object({
+							id: z.number(),
+							email: z.string(),
+							name: z.string(),
+							username: z.string(),
+						})
+					),
+				},
+			},
+			description: "User found successfully",
+		},
+		[HttpStatusCodes.NOT_FOUND]: {
+			content: {
+				"application/json": {
+					schema: errorResponseSchema,
+				},
+			},
+			description: "User not found",
+		},
+	},
+});
+
 export const list = createRoute({
 	path: "/users",
 	method: "get",
@@ -256,3 +292,4 @@ export type DeleteRoute = typeof delete_;
 export type GetByIdRoute = typeof getById;
 export type SetRecoveryTokenRoute = typeof setRecoveryToken;
 export type ResetPasswordRoute = typeof resetPassword;
+export type SearchByEmailRoute = typeof searchByEmail;

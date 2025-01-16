@@ -30,6 +30,7 @@ const router = createRouter()
 	.openapi(routes.update, transactionService.update)
 	.openapi(routes.delete_, transactionService.delete)
 	.openapi(routes.getMonthlyBalance, transactionService.getMonthlyBalance)
-	.openapi(routes.getCategoryTotals, transactionService.getCategoryTotals);
+	.openapi(routes.getCategoryTotals, transactionService.getCategoryTotals)
+	.openapi(routes.getMonthlyTrends, transactionService.getMonthlyTrends);
 
 export default router;

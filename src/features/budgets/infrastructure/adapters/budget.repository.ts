@@ -1,4 +1,5 @@
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, lt, sql } from "drizzle-orm";
+import { getYear, getMonth } from "date-fns";
 import DatabaseConnection from "@/core/infrastructure/database";
 import { budgets } from "@/schema";
 import { IBudgetRepository } from "@/budgets/domain/ports/budget-repository.port";
@@ -41,8 +42,12 @@ export class PgBudgetRepository implements IBudgetRepository {
 	}
 
 	async findByUserIdAndMonth(userId: number, month: Date): Promise<IBudget[]> {
-		const startOfMonth = new Date(month.getFullYear(), month.getMonth(), 1);
-		const endOfMonth = new Date(month.getFullYear(), month.getMonth() + 1, 0);
+		console.log(month.toISOString());
+
+		const year = month.getUTCFullYear();
+		const monthNumber = month.getUTCMonth() + 1;
+
+		console.log(year, monthNumber);
 
 		const result = await this.db
 			.select()
@@ -50,10 +55,8 @@ export class PgBudgetRepository implements IBudgetRepository {
 			.where(
 				and(
 					eq(budgets.user_id, userId),
-					and(
-						eq(budgets.month, startOfMonth.toISOString()),
-						eq(budgets.month, endOfMonth.toISOString())
-					)
+					eq(sql`EXTRACT(YEAR FROM ${budgets.month})`, year),
+					eq(sql`EXTRACT(MONTH FROM ${budgets.month})`, monthNumber)
 				)
 			);
 

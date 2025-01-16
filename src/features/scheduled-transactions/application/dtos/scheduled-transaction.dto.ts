@@ -30,7 +30,7 @@ export const createScheduledTransactionSchema = scheduledTransactionBaseSchema
 		amount: z.number().positive("Amount must be positive"),
 		description: z.string().optional(),
 		payment_method_id: z.number().optional(),
-		next_execution_date: z.string().datetime(),
+		next_execution_date: z.string().date(),
 		active: z.boolean().default(true),
 	})
 	.omit({
@@ -44,7 +44,7 @@ export const updateScheduledTransactionSchema = scheduledTransactionBaseSchema
 		amount: z.number().positive("Amount must be positive").optional(),
 		description: z.string().optional().nullable(),
 		payment_method_id: z.number().optional().nullable(),
-		next_execution_date: z.string().datetime().optional(),
+		next_execution_date: z.string().date().optional(),
 		active: z.boolean().optional(),
 	})
 	.partial()

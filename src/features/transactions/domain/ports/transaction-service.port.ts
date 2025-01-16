@@ -6,6 +6,7 @@ import {
 	GetByIdRoute,
 	GetCategoryTotalsRoute,
 	GetMonthlyBalanceRoute,
+	GetMonthlyTrendsRoute,
 	ListByUserRoute,
 	ListRoute,
 	UpdateRoute,
@@ -21,4 +22,5 @@ export interface ITransactionService {
 	delete: AppRouteHandler<DeleteRoute>;
 	getMonthlyBalance: AppRouteHandler<GetMonthlyBalanceRoute>;
 	getCategoryTotals: AppRouteHandler<GetCategoryTotalsRoute>;
+	getMonthlyTrends: AppRouteHandler<GetMonthlyTrendsRoute>;
 }

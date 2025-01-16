@@ -107,7 +107,7 @@ export const listByMonth = createRoute({
 			userId: z.string().regex(/^\d+$/).transform(Number),
 		}),
 		query: z.object({
-			month: z.string().datetime(),
+			month: z.string().date(),
 		}),
 	},
 	responses: {
