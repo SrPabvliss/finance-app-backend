@@ -1,0 +1,1 @@
+ALTER TABLE "debts" ALTER COLUMN "creditor_id" DROP NOT NULL;
